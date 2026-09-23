@@ -30,7 +30,7 @@ function normalizeEmail(email: string): string {
 /**
  * Local auth backend: users live in IndexedDB, passwords unlock an
  * HKDF-separated auth verifier, and the derived AES-256-GCM data key
- * is kept in sessionStorage. Swap for real server auth in
+ * is kept in localStorage. Swap for real server auth in
  * `lib/auth/index.ts`.
  */
 export const localAuthService: AuthService = {
@@ -100,10 +100,13 @@ export const localAuthService: AuthService = {
 
   async getCurrentUser() {
     const userId = getSessionUserId();
-    if (!userId) return null;
-    // Session without a data key (e.g. browser restarted and
-    // sessionStorage was cleared) means the vault is locked —
-    // force re-authentication.
+    if (!userId) {
+      // No session (signed out or expired) — drop any leftover key.
+      setExportedDataKey(null);
+      return null;
+    }
+    // Session without a data key (e.g. site data was cleared) means
+    // the vault is locked — force re-authentication.
     if (!getExportedDataKey()) {
       setSessionUserId(null);
       return null;

@@ -7,8 +7,8 @@
  *   master --HKDF("keynest:data")--> AES-256-GCM data key (encrypts items)
  *
  * Auth and encryption keys are separated so the stored verifier can never
- * be used to decrypt data. The data key lives in sessionStorage: reloads
- * stay unlocked, closing the browser locks the vault again.
+ * be used to decrypt data. The data key lives in localStorage and is
+ * cleared on sign-out or when the 30-day session expires.
  */
 
 const PBKDF2_ITERATIONS = 150_000;
@@ -85,7 +85,7 @@ async function hkdfAesKey(master: ArrayBuffer, info: string): Promise<CryptoKey>
     },
     key,
     { name: "AES-GCM", length: 256 },
-    true, // extractable — needed to persist in sessionStorage
+    true, // extractable — needed to persist in localStorage
     ["encrypt", "decrypt"],
   );
 }
@@ -133,7 +133,7 @@ export async function unlockWithPassword(
   return { dataKey, exportedDataKey };
 }
 
-/** Re-imports a persisted raw AES key (from sessionStorage). */
+/** Re-imports a persisted raw AES key (from localStorage). */
 export async function importDataKey(rawBase64: string): Promise<CryptoKey> {
   return crypto.subtle.importKey(
     "raw",

@@ -10,6 +10,7 @@ import {
 } from "react";
 import { trackInstall, trackUnlockOncePerDay } from "@/lib/analytics";
 import { getAuthService } from "@/lib/auth";
+import { getSessionExpiresAt } from "@/lib/auth/session";
 import type { AuthUser, SignInInput, SignUpInput } from "@/lib/auth/types";
 
 interface AuthContextValue {
@@ -63,33 +64,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }, []);
 
-  // Auto-lock: sign out after 5 minutes without interaction.
+  // Auto-lock: sign out when the 30-day session expires, even if the
+  // tab stays open the whole time.
   useEffect(() => {
     if (!user) return;
-    const IDLE_MS = 5 * 60 * 1000;
-    let lastReset = 0;
-    let timer: ReturnType<typeof setTimeout>;
-    const lock = () => void signOut();
-    const reset = () => {
-      const now = Date.now();
-      if (now - lastReset < 1000) return; // throttle high-frequency events
-      lastReset = now;
-      clearTimeout(timer);
-      timer = setTimeout(lock, IDLE_MS);
-    };
-    const events = [
-      "mousemove",
-      "mousedown",
-      "keydown",
-      "scroll",
-      "touchstart",
-    ] as const;
-    reset();
-    events.forEach((e) => window.addEventListener(e, reset, { passive: true }));
-    return () => {
-      clearTimeout(timer);
-      events.forEach((e) => window.removeEventListener(e, reset));
-    };
+    const expiresAt = getSessionExpiresAt();
+    if (!expiresAt) return;
+    const timer = setTimeout(
+      () => void signOut(),
+      Math.max(expiresAt - Date.now(), 0),
+    );
+    return () => clearTimeout(timer);
   }, [user, signOut]);
 
   const value = useMemo(

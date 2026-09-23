@@ -1,6 +1,6 @@
+import Image from "next/image";
 import {
   Fingerprint,
-  KeyRound,
   Lock,
   ServerOff,
   ShieldCheck,
@@ -26,8 +26,8 @@ const SECURITY_FEATURES = [
   },
   {
     icon: Timer,
-    title: "Auto-lock on close",
-    body: "The data key lives only in sessionStorage — reloads stay unlocked, but closing the browser locks the vault again.",
+    title: "30-day sessions",
+    body: "Your vault stays unlocked for 30 days on this device — sign out anytime to lock it immediately.",
   },
   {
     icon: Lock,
@@ -47,9 +47,13 @@ export function AboutView() {
       {/* What is Keynest */}
       <section className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-4 sm:p-5">
         <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 p-2.5 shadow-md shadow-indigo-500/25">
-            <KeyRound className="h-5 w-5 text-white" />
-          </div>
+          <Image
+            src="/imgs/keynest.png"
+            alt=""
+            width={40}
+            height={40}
+            className="rounded-xl shadow-md shadow-indigo-500/25"
+          />
           <div>
             <h2 className="font-semibold tracking-tight">What is Keynest?</h2>
             <p className="text-xs text-zinc-500">Local-first password vault</p>

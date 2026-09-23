@@ -1,6 +1,7 @@
 "use client";
 
-import { Info, KeyRound, LayoutGrid, LogOut, Plus, Star } from "lucide-react";
+import Image from "next/image";
+import { Info, LayoutGrid, LogOut, Plus, Star } from "lucide-react";
 import { useAuth } from "./AuthProvider";
 
 export type NavView = "all" | "favorites" | "about";
@@ -26,9 +27,13 @@ export function SideNav({ view, onViewChange, total, favorites }: SideNavProps) 
     <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 flex-col border-r border-zinc-800/60 bg-zinc-950/60 backdrop-blur-xl md:flex">
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-5 py-5">
-        <div className="rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 p-2 shadow-md shadow-indigo-500/25">
-          <KeyRound className="h-4 w-4 text-white" />
-        </div>
+        <Image
+          src="/imgs/keynest.png"
+          alt=""
+          width={36}
+          height={36}
+          className="rounded-xl shadow-md shadow-indigo-500/25"
+        />
         <div>
           <p className="text-sm font-semibold tracking-tight">Keynest</p>
           <p className="text-[11px] text-zinc-600">Local vault</p>

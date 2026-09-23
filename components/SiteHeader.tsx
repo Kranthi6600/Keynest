@@ -1,6 +1,7 @@
 "use client";
 
-import { KeyRound, LogOut } from "lucide-react";
+import Image from "next/image";
+import { LogOut } from "lucide-react";
 import { useAuth } from "./AuthProvider";
 
 export function SiteHeader() {
@@ -10,9 +11,13 @@ export function SiteHeader() {
     <header className="sticky top-0 z-10 border-b border-zinc-800/60 bg-zinc-950/80 backdrop-blur-xl">
       <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-4 sm:px-6">
         <div className="flex items-center gap-2.5">
-          <div className="rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 p-1.5 shadow-md shadow-indigo-500/25">
-            <KeyRound className="h-4 w-4 text-white" />
-          </div>
+          <Image
+            src="/imgs/keynest.png"
+            alt=""
+            width={28}
+            height={28}
+            className="rounded-lg shadow-md shadow-indigo-500/25"
+          />
           <span className="text-sm font-semibold tracking-tight">Keynest</span>
         </div>
         <div className="flex items-center gap-3">

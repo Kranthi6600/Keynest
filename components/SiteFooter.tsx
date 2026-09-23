@@ -7,12 +7,12 @@ const STRENGTHS = [
   "Local-only storage — data never leaves this browser (IndexedDB)",
   "PBKDF2-SHA256 · 150,000 iterations · per-user salt",
   "HKDF-separated keys — auth verifier cannot decrypt data",
-  "AES-256-GCM data key held in sessionStorage — vault locks on browser close",
+  "AES-256-GCM data key in localStorage — vault stays unlocked for 30 days",
   "Sign-in throttling — 5 failed attempts triggers a 60s lockout",
 ];
 
 const GAPS = [
-  "Data key is readable from sessionStorage while the vault is unlocked",
+  "Data key is readable from localStorage while the vault is unlocked",
   "Lockout counter can be reset by clearing site data",
 ];
 

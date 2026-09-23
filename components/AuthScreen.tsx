@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import {
   AlertCircle,
   Eye,
   EyeOff,
-  KeyRound,
   Loader2,
   Lock,
   Mail,
@@ -76,9 +76,14 @@ export function AuthScreen() {
       <div className="relative w-full max-w-md">
         {/* Logo */}
         <div className="mb-8 flex flex-col items-center gap-3">
-          <div className="rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 p-3 shadow-lg shadow-indigo-500/30">
-            <KeyRound className="h-6 w-6 text-white" />
-          </div>
+          <Image
+            src="/imgs/keynest.png"
+            alt="Keynest logo"
+            width={56}
+            height={56}
+            className="rounded-2xl shadow-lg shadow-indigo-500/30"
+            priority
+          />
           <div className="text-center">
             <h1 className="text-xl font-semibold tracking-tight">Keynest</h1>
             <p className="mt-1 text-sm text-zinc-400">
@@ -203,7 +208,7 @@ export function AuthScreen() {
         {/* Trust note */}
         <p className="mt-6 flex items-center justify-center gap-2 text-xs text-zinc-600">
           <ShieldCheck className="h-3.5 w-3.5" />
-          AES-256-GCM encrypted · PBKDF2 + HKDF keys · auto-locks when idle
+          AES-256-GCM encrypted · PBKDF2 + HKDF keys · stays unlocked for 30 days
         </p>
       </div>
     </div>

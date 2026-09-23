@@ -10,6 +10,7 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Keynest",
   description: "Keynest — your data, stored locally for now.",
+  icons: { icon: "/imgs/keynest.ico" },
   other: {
     // The UI is already dark — tell Dark Reader not to rewrite the DOM,
     // which also prevents its injected attributes from causing React
@@ -37,7 +38,8 @@ export default function RootLayout({
         </AuthProvider>
         <Script
           data-domain="keynest.app"
-          src="https://plausible.io/js/script.js"
+          data-api="/api/event"
+          src="/js/script.js"
           strategy="afterInteractive"
         />
       </body>

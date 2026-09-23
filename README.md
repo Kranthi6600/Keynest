@@ -52,10 +52,11 @@ app/api/health/route.ts        # Health-check route handler
 - **Key hierarchy** — password + salt → PBKDF2-SHA256 (150k iterations)
   → master key → HKDF splits it into an auth verifier (stored) and an
   AES-256 data key (never stored). The stored verifier can't decrypt data.
-- **Session** — user id in `localStorage`, data key in `sessionStorage`
-  (survives reloads, dies with the browser session → vault re-locks).
+- **Session** — user id + expiry in `localStorage`, data key in
+  `localStorage` (survives reloads and restarts; cleared on sign-out or
+  expiry).
 - **Lockout** — 5 failed sign-ins lock for 60s (`lib/auth/lockout.ts`).
-- **Auto-lock** — signs out after 5 minutes idle (`AuthProvider`).
+- **Auto-lock** — sessions expire 30 days after sign-in (`AuthProvider`).
 - **Headers** — `X-Frame-Options`, `nosniff`, `Referrer-Policy`,
   `Permissions-Policy` in `next.config.ts`.
 
