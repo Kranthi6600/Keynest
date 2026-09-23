@@ -81,7 +81,10 @@ export function AuthScreen() {
           </div>
           <div className="text-center">
             <h1 className="text-xl font-semibold tracking-tight">Keynest</h1>
-            <p className="mt-1 text-sm text-zinc-500">
+            <p className="mt-1 text-sm text-zinc-400">
+              Only one password to remember.
+            </p>
+            <p className="mt-1 text-xs text-zinc-500">
               {mode === "signin"
                 ? "Welcome back — sign in to continue"
                 : "Create your local workspace"}
