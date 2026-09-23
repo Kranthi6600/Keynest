@@ -64,7 +64,8 @@ export function AboutView() {
         </p>
         <p className="mt-3 text-sm leading-relaxed text-zinc-400">
           There is no account server and no cloud backup: your vault lives in
-          this browser's IndexedDB, and only your master password can unlock it.
+          this browser&apos;s IndexedDB, and only your master password can unlock
+          it.
         </p>
       </section>
 
