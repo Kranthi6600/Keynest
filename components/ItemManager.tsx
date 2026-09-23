@@ -536,8 +536,7 @@ export function ItemManager({ view, onStats }: ItemManagerProps) {
       )}
 
       {/* Backup & restore */}
-      {items.length > 0 && (
-        <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-3.5">
+      <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-3.5">
           <button
             type="button"
             onClick={() => setBackupOpen((v) => !v)}
@@ -559,13 +558,14 @@ export function ItemManager({ view, onStats }: ItemManagerProps) {
                 onChange={(e) => setBackupPass(e.target.value)}
                 placeholder="Backup passphrase — encrypts the .keynest file"
                 autoComplete="off"
-                className="rounded-lg border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-base outline-none sm:text-sm transition placeholder:text-zinc-600 focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/20"
+                disabled={items.length === 0}
+                className="rounded-lg border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-base outline-none sm:text-sm transition placeholder:text-zinc-600 focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/20 disabled:cursor-not-allowed disabled:opacity-40"
               />
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() => void handleExportEncrypted()}
-                  disabled={!backupPass.trim() || busy}
+                  disabled={items.length === 0 || !backupPass.trim() || busy}
                   className="flex items-center gap-1.5 rounded-lg border border-indigo-500/40 bg-indigo-500/10 px-3 py-2 text-sm font-medium text-indigo-300 transition hover:bg-indigo-500/20 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <FileKey className="h-4 w-4" />
@@ -574,7 +574,7 @@ export function ItemManager({ view, onStats }: ItemManagerProps) {
                 <button
                   type="button"
                   onClick={handleExportPlain}
-                  disabled={busy}
+                  disabled={items.length === 0 || busy}
                   className="flex items-center gap-1.5 rounded-lg border border-zinc-800 px-3 py-2 text-sm text-zinc-400 transition hover:border-zinc-700 hover:text-zinc-200 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <FileText className="h-4 w-4" />
@@ -624,7 +624,6 @@ export function ItemManager({ view, onStats }: ItemManagerProps) {
             </div>
           )}
         </div>
-      )}
 
       {error && (
         <div className="flex items-start gap-2.5 rounded-xl border border-red-900/50 bg-red-950/40 px-3.5 py-2.5 text-sm text-red-300">
