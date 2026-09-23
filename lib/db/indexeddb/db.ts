@@ -1,5 +1,6 @@
 import Dexie, { type EntityTable } from "dexie";
-import type { Item } from "../types";
+import type { StoredUser } from "@/lib/auth/types";
+import type { StoredItem } from "../types";
 
 /**
  * Dexie database for browser-side storage.
@@ -9,14 +10,33 @@ import type { Item } from "../types";
  * browser).
  */
 class KeynestDatabase extends Dexie {
-  items!: EntityTable<Item, "id">;
+  items!: EntityTable<StoredItem, "id">;
+  users!: EntityTable<StoredUser, "id">;
 
   constructor() {
     super("keynest");
     this.version(1).stores({
-      // Indexed fields: primary key `id`, plus indexes we query by.
       items: "id, createdAt, name",
     });
+    this.version(2).stores({
+      // v2: items gain an ownerId index for per-user scoping,
+      // plus the users table for local auth.
+      items: "id, createdAt, name, ownerId",
+      users: "id, email",
+    });
+    this.version(3)
+      .stores({
+        // v3: item payloads are AES-256-GCM encrypted — `name` is no
+        // longer plaintext so its index is dropped.
+        items: "id, createdAt, ownerId",
+        users: "id, email",
+      })
+      .upgrade(async (tx) => {
+        // Legacy plaintext items and pre-HKDF user records can't be
+        // migrated — clear them (dev-stage data only).
+        await tx.table("items").clear();
+        await tx.table("users").clear();
+      });
   }
 }
 

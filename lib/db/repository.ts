@@ -1,4 +1,4 @@
-import type { Item, NewItem } from "./types";
+import type { Item, ItemPatch, NewItem } from "./types";
 
 /**
  * Storage-agnostic repository contract.
@@ -15,4 +15,4 @@ export interface Repository<T, NewT, PatchT = Partial<NewT>> {
   remove(id: string): Promise<void>;
 }
 
-export type ItemRepository = Repository<Item, NewItem>;
+export type ItemRepository = Repository<Item, NewItem, ItemPatch>;
