@@ -144,6 +144,23 @@ export async function importDataKey(rawBase64: string): Promise<CryptoKey> {
   );
 }
 
+/** Random salt for password-derived keys (base64). */
+export function generateSalt(): string {
+  return toBase64(crypto.getRandomValues(new Uint8Array(SALT_LENGTH_BYTES)));
+}
+
+/**
+ * Derives an AES-256-GCM key from an arbitrary passphrase — used for
+ * backup files, which aren't tied to the account master key.
+ */
+export async function deriveBackupKey(
+  passphrase: string,
+  saltBase64: string,
+): Promise<CryptoKey> {
+  const master = await deriveMasterBits(passphrase, fromBase64(saltBase64));
+  return hkdfAesKey(master, "keynest:backup");
+}
+
 /** AES-256-GCM encrypt with a fresh random IV per call. */
 export async function encryptJson(
   key: CryptoKey,

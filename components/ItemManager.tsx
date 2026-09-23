@@ -4,10 +4,14 @@ import { useCallback, useEffect, useState } from "react";
 import {
   AlertCircle,
   Check,
+  ChevronDown,
   Copy,
   CopyPlus,
+  Database,
   Eye,
   EyeOff,
+  FileKey,
+  FileText,
   Loader2,
   Lock,
   Pencil,
@@ -16,10 +20,19 @@ import {
   Sparkles,
   Star,
   Trash2,
+  Upload,
   User,
   Wand2,
   X,
 } from "lucide-react";
+import {
+  buildEncryptedBackup,
+  buildPlainTextBackup,
+  isEncryptedBackup,
+  parseEncryptedBackup,
+  parsePlainTextBackup,
+  type BackupEntry,
+} from "@/lib/backup";
 import { getItemRepository } from "@/lib/db";
 import type { Item } from "@/lib/db/types";
 import type { NavView } from "./SideNav";
@@ -155,6 +168,15 @@ export function ItemManager({ view, onStats }: ItemManagerProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [backupOpen, setBackupOpen] = useState(false);
+  const [backupPass, setBackupPass] = useState("");
+  const [importPass, setImportPass] = useState("");
+  const [pendingImport, setPendingImport] = useState<{
+    name: string;
+    text: string;
+  } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -275,6 +297,116 @@ export function ItemManager({ view, onStats }: ItemManagerProps) {
       await refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to update item");
+    }
+  }
+
+  function flashNotice(message: string) {
+    setNotice(message);
+    setTimeout(() => setNotice((cur) => (cur === message ? null : cur)), 4000);
+  }
+
+  function downloadFile(filename: string, text: string, type: string) {
+    const url = URL.createObjectURL(new Blob([text], { type }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  const stamp = () => new Date().toISOString().slice(0, 10);
+
+  async function handleExportEncrypted() {
+    if (!backupPass.trim()) return;
+    setBusy(true);
+    try {
+      const text = await buildEncryptedBackup(items, backupPass);
+      downloadFile(`keynest-${stamp()}.keynest`, text, "application/json");
+      setBackupPass("");
+      flashNotice(`Exported ${items.length} items (encrypted)`);
+    } catch {
+      setError("Failed to build backup");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function handleExportPlain() {
+    downloadFile(
+      `keynest-${stamp()}.csv`,
+      buildPlainTextBackup(items),
+      "text/csv",
+    );
+    flashNotice(
+      `Exported ${items.length} items as plain text — store it safely`,
+    );
+  }
+
+  async function importEntries(entries: BackupEntry[]) {
+    if (entries.length === 0) {
+      setError("No items found in that file");
+      return;
+    }
+    setBusy(true);
+    try {
+      const existing = new Set(
+        items.map((i) => `${i.appName} ${i.username}`),
+      );
+      let added = 0;
+      for (const entry of entries) {
+        if (existing.has(`${entry.appName} ${entry.username}`)) continue;
+        const created = await repo.create({
+          appName: entry.appName,
+          username: entry.username,
+          password: entry.password,
+        });
+        if (entry.favorite) {
+          await repo.update(created.id, { favorite: true });
+        }
+        added++;
+      }
+      await refresh();
+      const skipped = entries.length - added;
+      flashNotice(
+        `Imported ${added} item${added === 1 ? "" : "s"}` +
+          (skipped
+            ? ` — skipped ${skipped} duplicate${skipped === 1 ? "" : "s"}`
+            : ""),
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Import failed");
+    } finally {
+      setBusy(false);
+      setPendingImport(null);
+      setImportPass("");
+    }
+  }
+
+  async function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    const text = await file.text();
+    if (isEncryptedBackup(text)) {
+      setPendingImport({ name: file.name, text });
+    } else {
+      await importEntries(parsePlainTextBackup(text));
+    }
+  }
+
+  async function handleDecryptImport() {
+    if (!pendingImport || !importPass) return;
+    setBusy(true);
+    try {
+      const entries = await parseEncryptedBackup(
+        pendingImport.text,
+        importPass,
+      );
+      setBusy(false);
+      await importEntries(entries);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Import failed");
+      setBusy(false);
     }
   }
 
@@ -403,10 +535,108 @@ export function ItemManager({ view, onStats }: ItemManagerProps) {
         </div>
       )}
 
+      {/* Backup & restore */}
+      {items.length > 0 && (
+        <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-3.5">
+          <button
+            type="button"
+            onClick={() => setBackupOpen((v) => !v)}
+            className="flex w-full items-center justify-between text-sm font-medium text-zinc-300"
+          >
+            <span className="flex items-center gap-2">
+              <Database className="h-4 w-4 text-zinc-500" />
+              Backup &amp; restore
+            </span>
+            <ChevronDown
+              className={`h-4 w-4 text-zinc-600 transition ${backupOpen ? "rotate-180" : ""}`}
+            />
+          </button>
+          {backupOpen && (
+            <div className="mt-3 flex flex-col gap-3">
+              <input
+                type="password"
+                value={backupPass}
+                onChange={(e) => setBackupPass(e.target.value)}
+                placeholder="Backup passphrase — encrypts the .keynest file"
+                autoComplete="off"
+                className="rounded-lg border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-base outline-none sm:text-sm transition placeholder:text-zinc-600 focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/20"
+              />
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => void handleExportEncrypted()}
+                  disabled={!backupPass.trim() || busy}
+                  className="flex items-center gap-1.5 rounded-lg border border-indigo-500/40 bg-indigo-500/10 px-3 py-2 text-sm font-medium text-indigo-300 transition hover:bg-indigo-500/20 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <FileKey className="h-4 w-4" />
+                  Encrypted backup
+                </button>
+                <button
+                  type="button"
+                  onClick={handleExportPlain}
+                  disabled={busy}
+                  className="flex items-center gap-1.5 rounded-lg border border-zinc-800 px-3 py-2 text-sm text-zinc-400 transition hover:border-zinc-700 hover:text-zinc-200 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <FileText className="h-4 w-4" />
+                  Plain text
+                </button>
+                <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-zinc-800 px-3 py-2 text-sm text-zinc-400 transition hover:border-zinc-700 hover:text-zinc-200">
+                  <Upload className="h-4 w-4" />
+                  Import file
+                  <input
+                    type="file"
+                    accept=".keynest,.json,.csv,.txt"
+                    className="hidden"
+                    onChange={(e) => void handleImportFile(e)}
+                  />
+                </label>
+              </div>
+              {pendingImport && (
+                <div className="flex flex-col gap-2 rounded-xl border border-indigo-500/30 bg-indigo-500/5 p-3">
+                  <p className="text-xs text-indigo-300">
+                    {pendingImport.name} is encrypted — enter its backup
+                    passphrase.
+                  </p>
+                  <div className="flex gap-2">
+                    <input
+                      type="password"
+                      value={importPass}
+                      onChange={(e) => setImportPass(e.target.value)}
+                      placeholder="Backup passphrase"
+                      autoComplete="off"
+                      className="min-w-0 flex-1 rounded-lg border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-base outline-none sm:text-sm transition placeholder:text-zinc-600 focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/20"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => void handleDecryptImport()}
+                      disabled={!importPass || busy}
+                      className="shrink-0 rounded-lg bg-gradient-to-r from-indigo-500 to-violet-500 px-3.5 py-2 text-sm font-semibold text-white transition hover:from-indigo-400 hover:to-violet-400 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      Import
+                    </button>
+                  </div>
+                </div>
+              )}
+              <p className="text-[11px] leading-relaxed text-zinc-600">
+                Encrypted backups need the passphrase to restore. Plain text
+                is readable by anyone — store it somewhere safe.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
       {error && (
         <div className="flex items-start gap-2.5 rounded-xl border border-red-900/50 bg-red-950/40 px-3.5 py-2.5 text-sm text-red-300">
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
           <span>{error}</span>
+        </div>
+      )}
+
+      {notice && (
+        <div className="flex items-start gap-2.5 rounded-xl border border-emerald-900/50 bg-emerald-950/40 px-3.5 py-2.5 text-sm text-emerald-300">
+          <Check className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{notice}</span>
         </div>
       )}
 
