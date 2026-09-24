@@ -28,7 +28,7 @@ export function SideNav({ view, onViewChange, total, favorites }: SideNavProps) 
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-5 py-5">
         <Image
-          src="/imgs/keynest.png"
+          src="/imgs/keynest-logo.png"
           alt=""
           width={36}
           height={36}

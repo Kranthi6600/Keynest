@@ -48,7 +48,7 @@ export function AboutView() {
       <section className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-4 sm:p-5">
         <div className="flex items-center gap-3">
           <Image
-            src="/imgs/keynest.png"
+            src="/imgs/keynest-logo.png"
             alt=""
             width={40}
             height={40}

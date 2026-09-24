@@ -77,7 +77,7 @@ export function AuthScreen() {
         {/* Logo */}
         <div className="mb-8 flex flex-col items-center gap-3">
           <Image
-            src="/imgs/keynest.png"
+            src="/imgs/keynest-logo.png"
             alt="Keynest logo"
             width={56}
             height={56}

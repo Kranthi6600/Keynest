@@ -12,7 +12,7 @@ export function SiteHeader() {
       <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-4 sm:px-6">
         <div className="flex items-center gap-2.5">
           <Image
-            src="/imgs/keynest.png"
+            src="/imgs/keynest-logo.png"
             alt=""
             width={28}
             height={28}
