@@ -68,12 +68,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // tab stays open the whole time.
   useEffect(() => {
     if (!user) return;
-    const expiresAt = getSessionExpiresAt();
-    if (!expiresAt) return;
-    const timer = setTimeout(
-      () => void signOut(),
-      Math.max(expiresAt - Date.now(), 0),
-    );
+    // setTimeout delays above ~24.8 days overflow a 32-bit int and fire
+    // instantly — re-arm in chunks until the expiry actually arrives.
+    const MAX_DELAY = 2_147_483_647;
+    let timer: ReturnType<typeof setTimeout>;
+    const arm = () => {
+      const expiresAt = getSessionExpiresAt();
+      if (!expiresAt) return;
+      const delay = expiresAt - Date.now();
+      if (delay <= 0) return void signOut();
+      timer = setTimeout(arm, Math.min(delay, MAX_DELAY));
+    };
+    arm();
     return () => clearTimeout(timer);
   }, [user, signOut]);
 
