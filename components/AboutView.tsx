@@ -1,7 +1,10 @@
 import Image from "next/image";
 import {
+  Eraser,
+  FileKey,
   Fingerprint,
   Lock,
+  MonitorSmartphone,
   ServerOff,
   ShieldCheck,
   Split,
@@ -38,6 +41,24 @@ const SECURITY_FEATURES = [
     icon: ServerOff,
     title: "100% local storage",
     body: "Everything lives in this browser's IndexedDB — no servers, no sync. The only outbound request is an optional anonymous counter ping, which honors Do Not Track.",
+  },
+];
+
+const GOOD_TO_KNOW = [
+  {
+    icon: MonitorSmartphone,
+    title: "Vaults are per-browser",
+    body: "The same email on another browser or device is a separate vault with its own key and data — nothing syncs between them.",
+  },
+  {
+    icon: FileKey,
+    title: "Backup & restore",
+    body: "Move your vault with Backup & restore: export an encrypted .keynest file protected by its own passphrase, or a readable CSV — then import it on any browser.",
+  },
+  {
+    icon: Eraser,
+    title: "Site data is the vault",
+    body: "Clearing this browser's site data permanently erases your vault. If the passwords matter, keep an encrypted backup somewhere safe.",
   },
 ];
 
@@ -108,12 +129,32 @@ export function AboutView() {
         </div>
       </section>
 
+      {/* Good to know */}
+      <section className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-4 sm:p-5">
+        <h2 className="font-semibold tracking-tight">Good to know</h2>
+        <ul className="mt-3 flex flex-col gap-3">
+          {GOOD_TO_KNOW.map(({ icon: Icon, title, body }) => (
+            <li key={title} className="flex items-start gap-3">
+              <div className="rounded-lg bg-indigo-500/10 p-1.5">
+                <Icon className="h-4 w-4 text-indigo-300" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-zinc-200">{title}</p>
+                <p className="mt-0.5 text-xs leading-relaxed text-zinc-500">
+                  {body}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+
       {/* Note */}
       <section className="rounded-2xl border border-amber-900/40 bg-amber-950/20 p-4 text-sm leading-relaxed text-amber-200/80">
-        <span className="font-medium text-amber-200">Keep in mind:</span> since
-        your master password is the only way to derive the encryption key,
-        forgetting it means the vault cannot be recovered — there is no reset
-        or recovery server by design.
+        <span className="font-medium text-amber-200">Keep in mind:</span> your
+        master password is the only way to derive the encryption key —
+        forgetting it means the vault cannot be recovered, and there is no
+        reset or recovery server by design. Keep an encrypted backup.
       </section>
     </div>
   );
